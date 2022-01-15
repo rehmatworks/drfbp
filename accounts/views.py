@@ -3,6 +3,7 @@ from .forms import NewUserForm
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import UserSerializer
 
 
 class RegisterView(APIView):
@@ -10,7 +11,7 @@ class RegisterView(APIView):
     permission_classes = []
     
     def post(self, request, *args, **kwargs):
-        form = NewUserForm(data=request.POST)
+        form = NewUserForm(data=request.data)
         
         if form.is_valid():
             user = form.save()
@@ -27,3 +28,10 @@ class RegisterView(APIView):
             'status': False,
             'errors': form.errors
         }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+class UserView(APIView):
+    http_method_names = ['get']
+    
+    def get(self, request, *args, **kwargs):
+        serializer = UserSerializer(instance=request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
