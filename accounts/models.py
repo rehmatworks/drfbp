@@ -2,6 +2,10 @@ from django.db import models
 from django.contrib.auth.models import (
     BaseUserManager, AbstractBaseUser
 )
+from django.utils.crypto import get_random_string
+from django.conf import settings
+from datetime import datetime, timedelta
+from django.utils.timezone import make_aware
 
 
 class MyUserManager(BaseUserManager):
@@ -65,8 +69,25 @@ class User(AbstractBaseUser):
         'Does the user have permissions to view the app `app_label`?'
         # Simplest possible answer: Yes, always
         return True
+    
+    def is_token_valid(self, token):
+        tok = self.tokens.filter(token=token).first()
+        if tok:
+            expiry = tok.created_at + timedelta(hours=int(settings.TOKEN_EXPIRY_HOURS))
+            if expiry > make_aware(datetime.now()):
+                return True
+
+        return False
 
     @property
     def is_staff(self):
         'Is the user a member of staff?'
         return self.is_admin
+
+def get_rand_token():
+    return get_random_string(120)
+
+class Token(models.Model):
+    token = models.CharField(unique=True, max_length=255, default=get_rand_token)
+    user = models.ForeignKey(User, related_name='tokens', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)

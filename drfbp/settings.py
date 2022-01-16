@@ -163,3 +163,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+TOKEN_EXPIRY_HOURS = 6
+MAX_PENDING_USER_TOKENS = 10

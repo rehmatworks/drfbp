@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
-from .forms import NewUserForm
+from .forms import (
+    NewUserForm, PasswordResetRequestForm)
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -22,6 +23,24 @@ class RegisterView(APIView):
                     'refresh': str(tok),
                     'access': str(tok.access_token)
                 }
+            }, status=status.HTTP_200_OK)
+        
+        return Response({
+            'status': False,
+            'errors': form.errors
+        }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+class PasswordResetView(APIView):
+    http_method_names = ['post']
+    permission_classes = []
+    
+    def post(self, request, *args, **kwargs):
+        form = PasswordResetRequestForm(data=request.data)
+        if form.is_valid():
+            tok = form.save()
+            return Response({
+                'status': True,
+                'token': str(tok.token)
             }, status=status.HTTP_200_OK)
         
         return Response({
