@@ -74,8 +74,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'django_cron',
     'accounts',
 ]
+
+
+CRON_CLASSES = [
+]
+DJANGO_CRON_DELETE_LOGS_OLDER_THAN = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
