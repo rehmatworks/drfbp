@@ -1,8 +1,10 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import User
+from .models import User, Token
 from django.core.exceptions import ValidationError
 from django.conf import settings
+from django.contrib.auth.password_validation import validate_password
+from django.core import validators
 
 
 class NewUserForm(UserCreationForm):
@@ -40,3 +42,27 @@ class PasswordResetRequestForm(forms.Form):
         if user:
             return user.tokens.create()
         return None
+    
+
+class PasswordUpdateForm(forms.Form):
+    token = forms.CharField(max_length=255)
+    password = forms.CharField(validators=[validate_password])
+    
+    def clean_token(self):
+        tok = self.cleaned_data.get('token')
+        if tok:
+            user = User.objects.filter(tokens__token=tok).first()
+            if not user or not user.is_token_valid(tok):
+                raise ValidationError('The token is either invalid or expired.')
+        return tok
+    
+    def save(self):
+        password = self.cleaned_data.get('password')
+        tok = self.cleaned_data.get('token')
+        user = User.objects.filter(tokens__token=tok).first()
+        if user and user.is_token_valid(tok):
+            user.set_password(password)
+            user.save()
+            Token.objects.filter(user=user, token=tok).delete()
+            return True
+        return False
